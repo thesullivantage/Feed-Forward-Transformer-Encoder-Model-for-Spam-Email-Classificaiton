@@ -1,2 +1,1 @@
-# transformer_encoder_spam
-Feed-Forward Transformer Encoder Model for Spam Email Classificaiton
+# Feed-Forward Transformer Encoder Model for Spam Email Classification
