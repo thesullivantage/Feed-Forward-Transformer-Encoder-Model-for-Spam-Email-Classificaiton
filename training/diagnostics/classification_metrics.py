@@ -29,7 +29,7 @@ X_valid_vec = np.array(dataset_dict['X_valid_vec'])
 y_concat = np.concatenate((y_train, y_test, y_valid))
 
 ### The code below plots histograms of label counts in each of our three datasets (train, test, validation).
-### We would like to see this at the feature engineering step (before training), but I do it here, since I did it in print statements before.
+### We would like to see this at the feature engineering step (before training), but I do it here, since I did it in print statements
 # This set (x-lim) edges of bins
 bins = [0, 1, 2]  
 

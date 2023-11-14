@@ -12,6 +12,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+def recordGrad(grads, model, gradhistory):
+    data = {}
+    for g,w in zip(grads, model.trainable_weights):
+        if '/kernel:' not in w.name:
+            continue # skip bias
+        name = w.name.split("/")[0]
+        data[name] = g.numpy()
+    gradhistory.append(data)
+    return
+
 # create training output directory
 ### MARK DEV: using argparse
 train_dat_dir = 'justin_training_data'
@@ -36,6 +46,13 @@ print(X_train_vec.shape)
 
 
 batch_size = 32
+epochs = 12
+
+# reduce learning rate to half (exponential decay) by end of training
+decay_steps = batch_size * epochs
+# decay_steps /= 10
+decay_rate = 0.5
+
 train_dataset = tf.data.Dataset.from_tensor_slices((X_train_vec, y_train)).batch(batch_size)
 test_dataset = tf.data.Dataset.from_tensor_slices((X_test_vec, y_test)).batch(batch_size)
 valid_dataset = tf.data.Dataset.from_tensor_slices((X_valid_vec, y_valid)).batch(batch_size)
@@ -51,24 +68,28 @@ num_heads = 2
 key_dim = embed_dim
 dropout = 0.2
 vocab_size_en = 10000
+clipvalue=0.1
+from_logits=True
 
 # Adam optimizer parameters
 beta_1 = 0.9
 beta_2 = 0.98
 epsilon = 1e-7
 
-# Use exponential decay schedule
-lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-    initial_learning_rate=5e-3,
-    decay_steps=10000,
-    decay_rate=0.9)
 
-optimizer = tf.keras.optimizers.Adam(lr_schedule, beta_1 = beta_1, beta_2=beta_2, epsilon=epsilon, clipvalue=0.5)
+
+# Use exponential decay schedule
+### initial_learning_rate * decay_rate ^ (step / decay_steps)
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=8e-4,
+    decay_steps=decay_steps,
+    decay_rate=decay_rate)
+
+optimizer = tf.keras.optimizers.Adam(lr_schedule, beta_1 = beta_1, beta_2=beta_2, epsilon=epsilon, clipvalue=clipvalue)
 
 # stored as variable for both bce_loss and model construction 
 # if true, last layer has linear activations and loss instance applies sigmoid function. 
 # if false, last layer has sigmoid activations and loss instance computes loss directly. 
-from_logits=True
 
 ############### MODEL & LOSS CONFIGURATION ###############
 
@@ -77,7 +98,7 @@ from_logits=True
 # so we: 1) we don't have to pass args in a special order 2) have some default args to accomodate end-users down the line
 
 # pass parameters in
-model = mod.transformer(num_transformer_layers, 
+model = mod.TransformerClassifier(num_transformer_layers, 
                         num_heads=num_heads, 
                         seq_length=seq_length, 
                         key_dim=key_dim,
@@ -85,12 +106,12 @@ model = mod.transformer(num_transformer_layers,
                         vocab_size=vocab_size_en, 
                         dropout=dropout,
                         from_logits=from_logits,
-                        last_dense=20)
+                        last_dense=20).model
 
 # compile model before training
-model.compile(optimizer="adam", ### no custom LR schedule (from paper)
+model.compile(optimizer=optimizer, ### no custom LR schedule (from paper)
               loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),# reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE),
-              metrics=["accuracy"])
+              )
 
 
 # binary cross-entropy loss
@@ -109,18 +130,7 @@ y_vals_valid = []
 y_val_preds = []
 grad_history = []
 
-def recordGrad(grads, model, gradhistory):
-    data = {}
-    for g,w in zip(grads, model.trainable_weights):
-        if '/kernel:' not in w.name:
-            continue # skip bias
-        name = w.name.split("/")[0]
-        data[name] = g.numpy()
-    gradhistory.append(data)
-    return
-
 # Training loop parameters
-epochs = 5
 # Print loss every 'print_frequency' training steps
 print_frequency = 1 
 
@@ -137,8 +147,8 @@ for epoch in range(epochs):
             loss_value = bce_loss(y_batch, y_pred)  # apply loss function
 
         grads = tape.gradient(loss_value, model.trainable_variables)
-        if step == 0:
-            recordGrad(grads, model, grad_history)
+        # if step == 0:
+        recordGrad(grads, model, grad_history)
             
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
         train_loss_history.append(loss_value.numpy())
@@ -146,7 +156,7 @@ for epoch in range(epochs):
         if step % print_frequency == 0:
             print(f"Step {step}/{len(train_dataset)}, Loss: {loss_value.numpy()}")
             example_output = y_pred[0].numpy()  # Get the output of the first example
-            print(f"Example Output: {example_output}")
+            # print(f"Example Output: {example_output}")
 
     # Validation step (similar to training step, but without gradient computation)
     for x_val, y_val in valid_dataset:
@@ -154,6 +164,7 @@ for epoch in range(epochs):
         y_val_preds.append(y_val_pred)
         y_vals_valid.append(y_val)
         val_loss = bce_loss(y_val, y_val_pred) 
+        print(f"Validation Loss: {val_loss.numpy()}")
         val_loss_history.append(val_loss.numpy())
 
 
@@ -190,6 +201,7 @@ train_data = {
     'y_val_preds': y_val_preds,
     'y_vals': y_vals,
     'y_vals_valid': y_vals_valid,
+    'grad_history': grad_history
 }
 
 print('Saving training data...')
