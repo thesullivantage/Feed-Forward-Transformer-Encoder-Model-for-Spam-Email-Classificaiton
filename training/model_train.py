@@ -1,3 +1,8 @@
+
+'''
+Template training script for experimentation purposes. Manual diagnosis of exploding gradients left to future work. 
+'''
+
 import sys
 import os
 import pickle
@@ -50,7 +55,6 @@ epochs = 12
 
 # reduce learning rate to half (exponential decay) by end of training
 decay_steps = batch_size * epochs
-# decay_steps /= 10
 decay_rate = 0.5
 
 train_dataset = tf.data.Dataset.from_tensor_slices((X_train_vec, y_train)).batch(batch_size)
@@ -62,6 +66,7 @@ valid_dataset = tf.data.Dataset.from_tensor_slices((X_valid_vec, y_valid)).batch
 # pre-processed data and model parameters
 seq_length = 640
 embed_dim = 32
+# for feed-forward layer of encoder, expand dimension to twice the size that of transformer encoded dimension, then reduce back to that size in successive layer.
 ff_dim = 64
 num_transformer_layers = 1
 num_heads = 2
@@ -75,8 +80,6 @@ from_logits=True
 beta_1 = 0.9
 beta_2 = 0.98
 epsilon = 1e-7
-
-
 
 # Use exponential decay schedule
 ### initial_learning_rate * decay_rate ^ (step / decay_steps)
@@ -95,9 +98,9 @@ optimizer = tf.keras.optimizers.Adam(lr_schedule, beta_1 = beta_1, beta_2=beta_2
 
 # Some notes for Justin:
 # I changed the transformer method signature (in model_tutorial_pkg.model_combined) to have more optional parameters (with "=" sign) 
-# so we: 1) we don't have to pass args in a special order 2) have some default args to accomodate end-users down the line
+# so that we: 1) don't have to pass args in a special order 2) have some default args to accommodate end-users down the line
 
-# pass parameters in
+# construct model
 model = mod.TransformerClassifier(num_transformer_layers, 
                         num_heads=num_heads, 
                         seq_length=seq_length, 
@@ -113,13 +116,12 @@ model.compile(optimizer=optimizer, ### no custom LR schedule (from paper)
               loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),# reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE),
               )
 
-
 # binary cross-entropy loss
 bce_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
 ############### TRAINING LOOP ###############
 
-# Initialize training history lists to store data every step
+# Initialize training history lists to store data at every step
 train_loss_history = []
 train_accuracy_history = []
 val_loss_history = []
@@ -187,7 +189,6 @@ ax[2].set_title("Loss")
 ax[2].plot(range(len(train_loss_history)), train_loss_history)
 fig.savefig(os.path.join(train_dat_dir, 'gradients_loss_plot.png'), dpi=300)
 
-
 print('Saving model weights...')
 model.save_weights(os.path.join(train_dat_dir,'justin_model_weights_altered.h5'))
 print('Model weights saved.')
@@ -212,6 +213,3 @@ with open(os.path.join(train_dat_dir, 'training_data_1.pickle'), "wb") as fp:
     }
     pickle.dump(data, fp)
 print('Training data saved.')
-
-
-
