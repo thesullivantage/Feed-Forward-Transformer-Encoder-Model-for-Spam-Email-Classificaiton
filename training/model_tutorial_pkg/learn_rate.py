@@ -2,7 +2,9 @@ import tensorflow as tf
 
 class TransformerSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     '''
-    Learning rate scheduler, as described in the paper "Attention is all you need"
+    Learning rate scheduler, as described in the seminal "Attention is all you need" paper that introduces the transformer model architecture. 
+    Not used in the current model implementation, in favor of a simple exponential decay scheduler, based on observations of exploding gradients.
+    Future work will include tuning model using this scheduler.
     '''
     def __init__(self, key_dim, warmup_steps=4000):
         super().__init__()
