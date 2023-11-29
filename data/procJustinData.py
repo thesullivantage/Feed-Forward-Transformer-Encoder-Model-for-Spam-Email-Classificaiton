@@ -59,10 +59,6 @@ df['token_length'] = df['email'].str.split().map(len)
 percentile = 95
 percentile_data = int(round(np.percentile(df['token_length'], percentile), 0))
 
-# Filter the DataFrame to only include emails with a token length at or below the 95th percentile; so we shouldn't be classifying any emails longer than this
-# Actually, this is handled inside of TextVectorizer
-# filtered_df = df[df['token_length'] <= percentile_data]
-# filtered_df = filtered_df.drop(columns=['token_length'])
 
 tokens = set()
 eng_maxlen = 0
@@ -108,13 +104,12 @@ vectorizer = TextVectorization(
 )
 
 text_dat_total = df['email']
-# fit and saving vectorizer data
+# fit vectorizer and save weights
 print('Fitting Text Vectorizer...')
 vectorizer.adapt(text_dat_total)
 
 vocabulary = vectorizer.get_vocabulary()
 
-# save vectorizer data for fitting of other data, later, if desired
 print('Saving Vectorizer Data...')
 if not os.path.exists('vectorizer_data'):
     os.makedirs('vectorizer_data')
@@ -130,7 +125,7 @@ with open("vectorizer_data/vectorizer.pickle", "wb") as fp:
 
 vectorized_texts = vectorizer(text_dat_total)
 
-# shuffle df for train-test-validation set splitting.
+# shuffle DataFrame.
 # random_state=# set for reproducibility; we also reset & drop the previous df's indexing, here.
 randomized_df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
