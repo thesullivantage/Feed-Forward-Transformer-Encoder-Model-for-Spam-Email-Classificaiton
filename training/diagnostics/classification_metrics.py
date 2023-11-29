@@ -1,3 +1,7 @@
+'''
+This script is written to evaluate the performance of our model on an imbalanced dataset, which is also evaluated using the below histograms here. 
+'''
+
 import os 
 import sys
 import pickle
@@ -88,13 +92,13 @@ y_valid_values = np.concatenate([y.numpy() for y in y_valid_values])
 # precision_train, recall_train, thresholds_train = precision_recall_curve(y_train_values, y_train_probs)
 precision_valid, recall_valid, thresholds_valid = precision_recall_curve(y_valid_values, y_val_probs)
 
-# calculate AUC (area under curve) of precision-recall plot
+# calculate precision-recall area under the curve (AUC)
 auc_PR_valid = round(auc(recall_valid, precision_valid), 2)
 
 # probability of randomly drawing a positive sample: corresponding to a "no-skill" model
 no_skill_frac_valid = round(len(y_valid_values[y_valid_values==1]) / len(y_valid_values), 2)
 
-# plot precision-recall curve of our classifier against our 
+# plot precision-recall curve of our classifier against "no-skill" curve
 plt.plot(recall_valid, precision_valid, 'r--', label=f'AUC={auc_PR_valid}')
 plt.plot([0, 1], [no_skill_frac_valid, no_skill_frac_valid], linestyle='--', label=f'No Skill AUC={no_skill_frac_valid}')
 plt.title('Precision-Recall: Validation Data')
