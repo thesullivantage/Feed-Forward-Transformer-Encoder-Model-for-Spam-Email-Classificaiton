@@ -1,7 +1,7 @@
 # Training Notes - Alterations from ML Mastery Tutorial
 
 ## On observing exploding gradients (NaN loss):
-- Still using trainable position embedding. My basic working theory is that using the sinusoidal position encoding does not provide the same amount of information that the trainable encoding does. We may still have some bugs with that encoding module.
+- Still using trainable position embedding.
     - That is, the dense matrix mapped to with layers.
     - Embedding is trained in the gradient descent process, while the sinusoidal embeddings are fixed by position. 
 
