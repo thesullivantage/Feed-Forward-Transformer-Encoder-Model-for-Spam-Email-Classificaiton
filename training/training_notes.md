@@ -1,4 +1,4 @@
-# Training Notes - Alterations from ML Mastery Tutorial
+# Training Notes
 
 ## On observing exploding gradients (NaN loss):
 - Still using trainable position embedding.
