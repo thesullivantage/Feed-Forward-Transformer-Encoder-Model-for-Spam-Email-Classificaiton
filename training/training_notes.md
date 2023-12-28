@@ -1,9 +1,10 @@
 # Training Notes
 
-## On observing exploding gradients (NaN loss):
+## On observing exploding gradients (NaN loss) with sinusoidal positional text embedding:
 - Still using trainable position embedding.
     - That is, the dense matrix mapped to with layers.
-    - Embedding is trained in the gradient descent process, while the sinusoidal embeddings are fixed by position. 
+    - Embedding is trained in the gradient descent process, while the sinusoidal embeddings are fixed by position.
+    - Potential for more information (an extra layer of training) with more spatial/time complexity.
 
 ## Tuning steps that have produced good results:
 - Gradient Clipping:
