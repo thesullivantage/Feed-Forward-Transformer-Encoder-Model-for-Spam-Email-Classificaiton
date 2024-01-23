@@ -10,7 +10,6 @@
 - TODO: Epsilon (difference in forward difference numerical calculation) should probably be passed as a parameter. 
 
 ## Training Notes - Preliminary
-### Data
 - Training needs to take place on the unit-standardized interval (-1, 1) for stability of gradient descent.
 - Up to this point, I have been implementing SGD: runninng gradient descent for every sample (batch size: 1).
 - Training is currently not converging. __ Squared error values (using SGD; not computing mean) values appear consistent with the x-values themselves.__.
