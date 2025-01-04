@@ -1,4 +1,4 @@
-# Feed-Forward Transformer Encoder Model for Spam Email Classification
+# Feed-Forward Transformer Encoder Model for Spam Email Classification (Keras Prototype)
 
 - A deep, feed-forward classification model built using text vectorization, custom pre-processing using the Pandas library in Python, and a transformer encoder network built in Keras for spam email classification.
 
